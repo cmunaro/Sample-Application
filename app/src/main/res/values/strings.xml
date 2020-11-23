@@ -1,0 +1,11 @@
+<resources>
+    <string name="app_name">SurfingSpot</string>
+    <string name="city_description">%1$s - %2$s degrees</string>
+    <string name="sunny">Sunny</string>
+    <string name="cloudy">Cloudy</string>
+    <string name="city_background_description">Image of the city</string>
+    <string name="network_error">Network error</string>
+    <string name="retry">Retry</string>
+    <string name="loading">Loading…</string>
+    <string name="internal_server_error">Internal server error</string>
+</resources>
