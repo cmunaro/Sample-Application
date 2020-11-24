@@ -1,6 +1,5 @@
 package com.cmunaro.surfingspot.home.recycleradapter
 
-import android.widget.ImageView.ScaleType
 import androidx.recyclerview.widget.RecyclerView
 import coil.load
 import com.cmunaro.surfingspot.R
@@ -23,12 +22,6 @@ class CityViewHolder(private val binding: CityCardBinding) : RecyclerView.ViewHo
     fun updateImageURL(imageURL: String?) {
         binding.backgroundImage.load(imageURL) {
             placeholder(R.drawable.loader_gif)
-            listener(
-                onSuccess = { _, _ ->
-                    binding.backgroundImage.scaleType = ScaleType.CENTER_CROP
-                    binding.invalidateAll()
-                },
-            )
         }
     }
 }

@@ -1,14 +1,31 @@
 package com.cmunaro.surfingspot.base
 
-import androidx.databinding.ViewDataBinding
-import androidx.lifecycle.ViewModel
+import androidx.annotation.VisibleForTesting
+import androidx.lifecycle.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.channels.consumeEach
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
 
 @ExperimentalCoroutinesApi
-abstract class BaseViewModel<S : State<B>, SC : StateChange, I: Intent, B: ViewDataBinding> : ViewModel() {
-    abstract val reducer: Reducer<S, SC, B>
+abstract class BaseViewModel<I: Intent, S : State<*>, SC : StateChange> :
+    LifecycleObserver, ViewModel() {
+    @VisibleForTesting
+    abstract val reducer: Reducer<*, *, *>
+    @VisibleForTesting
     abstract val state: StateFlow<S>
-    protected abstract val intentChannel: Channel<I>
+    @VisibleForTesting
+    abstract val intentChannel: Channel<I>
+
+    @OnLifecycleEvent(Lifecycle.Event.ON_START)
+    fun handleIntents() {
+        viewModelScope.launch {
+            intentChannel.consumeEach { intent ->
+                handleIntent(intent)
+            }
+        }
+    }
+
+    protected abstract suspend fun handleIntent(intent: I)
 }

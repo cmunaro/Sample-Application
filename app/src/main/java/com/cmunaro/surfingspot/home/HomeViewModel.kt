@@ -9,20 +9,16 @@ import com.cmunaro.surfingspot.home.HomeFragment.*
 import com.cmunaro.surfingspot.home.HomeFragment.HomeIntent.*
 import com.cmunaro.surfingspot.service.CitiesDataSourceService
 import com.cmunaro.surfingspot.service.MeteoService
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.channels.consumeEach
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.launch
 import org.koin.core.KoinComponent
 import org.koin.core.inject
 
 @ExperimentalCoroutinesApi
-class HomeViewModel : BaseViewModel<HomeState, HomeStateChange, HomeIntent, HomeFragmentBinding>(), KoinComponent {
+class HomeViewModel : BaseViewModel<HomeIntent, HomeState, HomeStateChange>(), KoinComponent {
     override val reducer: Reducer<HomeState, HomeStateChange, HomeFragmentBinding> by inject()
     override val intentChannel = Channel<HomeIntent>(Channel.UNLIMITED)
     private val _state = MutableStateFlow<HomeState>(HomeState.Idle)
@@ -32,32 +28,20 @@ class HomeViewModel : BaseViewModel<HomeState, HomeStateChange, HomeIntent, Home
     private val meteoService: MeteoService by inject()
     private var meteoObserverJob: Job? = null
 
-    init {
-        viewModelScope.launch {
-            handleIntents()
-        }
-    }
-
-    fun deliverIntent(intent: HomeIntent) = viewModelScope.launch {
-        intentChannel.send(intent)
-    }
-
-    private suspend fun handleIntents() {
-        intentChannel.consumeEach { intent ->
-            when (intent) {
-                StartMeteoObserving -> {
-                    oberveMeteo()
-                    startAssignRandomTemperatures()
-                }
-                StopMeteoObserving -> {
-                    stopRandomTemperatures()
-                    stopObserver()
-                }
+    override suspend fun handleIntent(intent: HomeIntent) {
+        when (intent) {
+            StartMeteoObserving -> {
+                observeMeteo()
+                startAssignRandomTemperatures()
+            }
+            StopMeteoObserving -> {
+                stopRandomTemperatures()
+                stopObserver()
             }
         }
     }
 
-    private suspend fun oberveMeteo() {
+    private suspend fun observeMeteo() {
         stopObserver()
         meteoObserverJob = viewModelScope.launch {
             cityService.getCities().collect { resource ->

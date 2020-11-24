@@ -8,23 +8,24 @@ import com.cmunaro.surfingspot.R
 import com.cmunaro.surfingspot.base.BaseFragment
 import com.cmunaro.surfingspot.base.Intent
 import com.cmunaro.surfingspot.databinding.HomeFragmentBinding
+import com.cmunaro.surfingspot.home.HomeFragment.*
 import com.cmunaro.surfingspot.home.HomeFragment.HomeIntent.*
 import com.cmunaro.surfingspot.home.recycleradapter.MeteoRecyclerAdapter
-import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.*
 
 @ExperimentalCoroutinesApi
-class HomeFragment : BaseFragment<HomeViewModel, HomeFragmentBinding>() {
+class HomeFragment : BaseFragment<HomeIntent, HomeViewModel, HomeFragmentBinding>() {
     override val layoutResource = R.layout.home_fragment
     override val viewModelClass = HomeViewModel::class.java
 
     override fun onResume() {
         super.onResume()
-        viewModel.deliverIntent(StartMeteoObserving)
+        deliverIntent(StartMeteoObserving)
     }
 
     override fun onPause() {
         super.onPause()
-        viewModel.deliverIntent(StopMeteoObserving)
+        deliverIntent(StopMeteoObserving)
     }
 
     override fun setupUI() {
