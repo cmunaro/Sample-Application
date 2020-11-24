@@ -1,7 +1,5 @@
 package com.cmunaro.surfingspot
 
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleRegistry
 import com.cmunaro.surfingspot.base.Reducer
 import com.cmunaro.surfingspot.data.Resource
 import com.cmunaro.surfingspot.data.room.entity.City
@@ -25,21 +23,18 @@ import org.koin.test.KoinTest
 import org.koin.test.mock.declareMock
 import org.mockito.Mockito.verify
 
-
 @ExperimentalCoroutinesApi
-class HomeViewModelTest : KoinTest {
+class HomeViewModelTest : AppArchitectureVMTest<HomeViewModel>(), KoinTest {
     private lateinit var reducer: Reducer<HomeState, HomeStateChange, HomeFragmentBinding>
-    private lateinit var viewModel: HomeViewModel
     private lateinit var meteoService: MeteoService
     private lateinit var citiesService: CitiesDataSourceService
     private val citiesListFlow = MutableStateFlow<Resource<List<City>>>(Resource.Loading())
-    private val lifecycle = LifecycleRegistry(mock())
 
     @get:Rule
     var coroutinesTestRule = CoroutinesTestRule()
 
     @Before
-    fun setup() = runBlocking {
+    override fun setup() = runBlocking {
         startKoin { modules(koinModule) }
         reducer = declareMock { }
         citiesService = declareMock()
@@ -47,8 +42,7 @@ class HomeViewModelTest : KoinTest {
         whenever(citiesService.getCities(true)).thenReturn(citiesListFlow)
         whenever(reducer.reduce(anyOrNull(), anyOrNull())).thenReturn(HomeState.Idle)
         viewModel = HomeViewModel()
-        lifecycle.addObserver(viewModel)
-        lifecycle.handleLifecycleEvent(Lifecycle.Event.ON_START)
+        super.setup()
     }
 
     @After
