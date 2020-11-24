@@ -1,18 +1,16 @@
 package com.cmunaro.surfingspot
 
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleRegistry
 import com.cmunaro.surfingspot.base.Reducer
 import com.cmunaro.surfingspot.data.Resource
 import com.cmunaro.surfingspot.data.room.entity.City
-import com.cmunaro.surfingspot.home.HomeIntent
-import com.cmunaro.surfingspot.home.HomeState
-import com.cmunaro.surfingspot.home.HomeStateChange
-import com.cmunaro.surfingspot.home.HomeViewModel
+import com.cmunaro.surfingspot.databinding.HomeFragmentBinding
+import com.cmunaro.surfingspot.home.*
+import com.cmunaro.surfingspot.home.HomeFragment.HomeIntent.*
 import com.cmunaro.surfingspot.service.CitiesDataSourceService
 import com.cmunaro.surfingspot.service.MeteoService
-import com.nhaarman.mockitokotlin2.anyOrNull
-import com.nhaarman.mockitokotlin2.eq
-import com.nhaarman.mockitokotlin2.isA
-import com.nhaarman.mockitokotlin2.whenever
+import com.nhaarman.mockitokotlin2.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.runBlocking
@@ -27,13 +25,15 @@ import org.koin.test.KoinTest
 import org.koin.test.mock.declareMock
 import org.mockito.Mockito.verify
 
+
 @ExperimentalCoroutinesApi
 class HomeViewModelTest : KoinTest {
-    private lateinit var reducer: Reducer<HomeState, HomeStateChange>
+    private lateinit var reducer: Reducer<HomeState, HomeStateChange, HomeFragmentBinding>
     private lateinit var viewModel: HomeViewModel
     private lateinit var meteoService: MeteoService
     private lateinit var citiesService: CitiesDataSourceService
     private val citiesListFlow = MutableStateFlow<Resource<List<City>>>(Resource.Loading())
+    private val lifecycle = LifecycleRegistry(mock())
 
     @get:Rule
     var coroutinesTestRule = CoroutinesTestRule()
@@ -47,6 +47,8 @@ class HomeViewModelTest : KoinTest {
         whenever(citiesService.getCities(true)).thenReturn(citiesListFlow)
         whenever(reducer.reduce(anyOrNull(), anyOrNull())).thenReturn(HomeState.Idle)
         viewModel = HomeViewModel()
+        lifecycle.addObserver(viewModel)
+        lifecycle.handleLifecycleEvent(Lifecycle.Event.ON_START)
     }
 
     @After
@@ -56,8 +58,8 @@ class HomeViewModelTest : KoinTest {
 
     @Test
     fun manageIntents() = runBlockingTest {
-        viewModel.deliverIntent(HomeIntent.StartMeteoObserving)
-        viewModel.deliverIntent(HomeIntent.StopMeteoObserving)
+        viewModel.intentChannel.send(StartMeteoObserving)
+        viewModel.intentChannel.send(StopMeteoObserving)
 
         verify(meteoService).startGettingMeteo()
         verify(citiesService).getCities(true)
@@ -66,7 +68,7 @@ class HomeViewModelTest : KoinTest {
 
     @Test
     fun deliverSuccessStateChange() = runBlockingTest {
-        viewModel.deliverIntent(HomeIntent.StartMeteoObserving)
+        viewModel.intentChannel.send(StartMeteoObserving)
         val cityList = listOf(City("Cuba"))
 
         citiesListFlow.value = Resource.Success(cityList)
@@ -77,7 +79,7 @@ class HomeViewModelTest : KoinTest {
 
     @Test
     fun deliverErrorStateChange() = runBlockingTest {
-        viewModel.deliverIntent(HomeIntent.StartMeteoObserving)
+        viewModel.intentChannel.send(StartMeteoObserving)
 
         citiesListFlow.value = Resource.Error()
 
