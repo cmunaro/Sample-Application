@@ -10,7 +10,7 @@ import kotlinx.coroutines.launch
 
 @ExperimentalCoroutinesApi
 abstract class BaseViewModel<I: Intent, S : State<*>, SC : StateChange> :
-    LifecycleObserver, ViewModel() {
+    ViewModel() {
     @VisibleForTesting
     abstract val reducer: Reducer<*, *, *>
     @VisibleForTesting
@@ -18,8 +18,7 @@ abstract class BaseViewModel<I: Intent, S : State<*>, SC : StateChange> :
     @VisibleForTesting
     abstract val intentChannel: Channel<I>
 
-    @OnLifecycleEvent(Lifecycle.Event.ON_START)
-    fun handleIntents() {
+    fun startObservingIntents() {
         viewModelScope.launch {
             intentChannel.consumeEach { intent ->
                 handleIntent(intent)

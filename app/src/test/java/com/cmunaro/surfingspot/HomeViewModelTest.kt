@@ -24,7 +24,8 @@ import org.koin.test.mock.declareMock
 import org.mockito.Mockito.verify
 
 @ExperimentalCoroutinesApi
-class HomeViewModelTest : AppArchitectureVMTest<HomeViewModel>(), KoinTest {
+class HomeViewModelTest : KoinTest {
+    private lateinit var viewModel: HomeViewModel
     private lateinit var reducer: Reducer<HomeState, HomeStateChange, HomeFragmentBinding>
     private lateinit var meteoService: MeteoService
     private lateinit var citiesService: CitiesDataSourceService
@@ -34,7 +35,7 @@ class HomeViewModelTest : AppArchitectureVMTest<HomeViewModel>(), KoinTest {
     var coroutinesTestRule = CoroutinesTestRule()
 
     @Before
-    override fun setup() = runBlocking {
+    fun setup() = runBlocking {
         startKoin { modules(koinModule) }
         reducer = declareMock { }
         citiesService = declareMock()
@@ -42,7 +43,7 @@ class HomeViewModelTest : AppArchitectureVMTest<HomeViewModel>(), KoinTest {
         whenever(citiesService.getCities(true)).thenReturn(citiesListFlow)
         whenever(reducer.reduce(anyOrNull(), anyOrNull())).thenReturn(HomeState.Idle)
         viewModel = HomeViewModel()
-        super.setup()
+        viewModel.startObservingIntents()
     }
 
     @After

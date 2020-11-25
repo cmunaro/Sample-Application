@@ -28,9 +28,9 @@ abstract class BaseFragment<I: Intent, VM : BaseViewModel<I, *, *>, B : ViewData
         savedInstanceState: Bundle?
     ): View {
         viewModel = ViewModelProvider(this).get(viewModelClass)
-        lifecycle.addObserver(viewModel)
         binding = DataBindingUtil.inflate(inflater, layoutResource, container, false)
         setupUI()
+        viewModel.startObservingIntents()
         return binding.root
     }
 
